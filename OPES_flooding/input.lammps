@@ -1,0 +1,55 @@
+variable        NSTEPS1         equal 40000000
+variable        DUMP_FREQ       equal 50
+variable        DUMP_FREQ1      equal 50
+variable        TEMP            equal 330
+variable	SEED1           equal 3040 
+variable	SEED2           equal 1450 
+variable        TAU_T           equal 0.05
+variable        path            string /path/1/mlip_model
+
+#SETUP
+timer           timeout 85000
+units           metal
+boundary        p p f
+atom_style      atomic
+newton          on
+atom_modify     map yes
+
+
+restart 80000 lmp.restart
+#neigh_modify    delay 10 every 1
+
+
+read_data     data.lmp
+mass          1 107.8682
+mass          2 12.0107
+mass          3 1.00784
+mass          4 15.9994
+
+#group         bottom id 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 60 61 62 63 64 65 66 67 68 69 70 71 72 73 74 75 76 77 78 79 80 81 82 83 118 119 120 121 122 123 124 125 126 127 128 129 130 131 132 133 134 135 136 137 138 139 140 141 175 176 177 178 179 180 181 182 183 184 185 186 187 188 189 190 191 192 193 194 195 196 197 198
+region        1 block INF INF INF INF INF 3.0
+group         bottom region 1
+group         atoms1 subtract all bottom
+
+pair_style      mace no_domain_decomposition
+pair_coeff      * * ${path}/energy_force_swa.model-lammps.pt Ag C H O
+
+# COMPUTE
+
+# TIMESTEP
+timestep	0.0005  #ps 
+thermo          ${DUMP_FREQ}
+thermo_style    custom step temp pe ke etotal density press vol
+thermo_modify   flush yes
+
+# DUMP
+dump            traj all xyz ${DUMP_FREQ1} traj.xyz
+dump_modify     traj append yes element Ag C H O
+
+velocity        all create ${TEMP} ${SEED1} dist gaussian
+fix             1 all plumed plumedfile plumed.dat
+fix             2 atoms1 nve
+fix             3 atoms1 temp/csvr ${TEMP} ${TEMP} ${TAU_T} ${SEED2}
+fix             4 all wall/reflect zlo 0.0 zhi 29.458
+run             ${NSTEPS1}
+
