@@ -1,0 +1,5 @@
+This folder contians four MLIP models for describing CO2 adsorption process at Ag/ISM interface under four differemt electric potential condtions.
+p1: PZC condition;
+p2: -1 V vs. SHE;
+p3: -1.5 V vs. SHE;
+p4: -2 V vs. SHE;
